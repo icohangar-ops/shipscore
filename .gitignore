@@ -58,10 +58,15 @@ server.log
 /scripts/
 /mini-services/
 /examples/
-/tests/
 /.zscripts/
 /vercel-deploy/
 /db/
 Caddyfile
 worklog.md
 shipscore-report.json
+
+# shipscore scanner — cloned repos & scan artifacts
+scans/
+
+# keep the example env
+!.env.example

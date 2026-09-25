@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ScoreDial, CategoryBar } from '@/components/landing/score-widgets';
 import { ArrowRight, Github, RadioTower, Star } from 'lucide-react';
 
 export const GITHUB_URL = 'https://github.com/Cubiczan/shipscore';
@@ -11,48 +12,6 @@ const categories = [
   { name: 'Secure', score: 38 },
   { name: 'Test', score: 29 },
 ];
-
-function ScoreDial({ score }: { score: number }) {
-  const r = 52;
-  const c = 2 * Math.PI * r;
-  const filled = (score / 100) * c;
-  return (
-    <div className="relative h-36 w-36 shrink-0" role="img" aria-label={`Overall score ${score} of 100`}>
-      <svg viewBox="0 0 128 128" className="h-full w-full -rotate-90">
-        <circle cx="64" cy="64" r={r} fill="none" stroke="oklch(0.28 0 0)" strokeWidth="10" />
-        <circle
-          cx="64"
-          cy="64"
-          r={r}
-          fill="none"
-          stroke="oklch(0.83 0.16 84)"
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={`${filled} ${c}`}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-4xl font-bold tabular-nums text-zinc-50">{score}</span>
-        <span className="text-xs text-zinc-500">/ 100</span>
-      </div>
-    </div>
-  );
-}
-
-function CategoryBar({ name, score }: { name: string; score: number }) {
-  const tone = score >= 70 ? 'bg-emerald-400' : score >= 50 ? 'bg-amber-400' : 'bg-red-400';
-  return (
-    <div>
-      <div className="mb-1.5 flex items-center justify-between text-sm">
-        <span className="font-medium text-zinc-300">{name}</span>
-        <span className="tabular-nums text-zinc-500">{score}/100</span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
-        <div className={`h-full rounded-full ${tone}`} style={{ width: `${score}%` }} />
-      </div>
-    </div>
-  );
-}
 
 export function Nav() {
   return (
@@ -70,6 +29,8 @@ export function Nav() {
           <a href="#how" className="transition hover:text-amber-300">How it works</a>
           <a href="#categories" className="transition hover:text-amber-300">Categories</a>
           <a href="#action" className="transition hover:text-amber-300">GitHub Action</a>
+          <a href="#try" className="transition hover:text-amber-300">Try live</a>
+          <a href="#scoreboard" className="transition hover:text-amber-300">Scoreboard</a>
           <a href="#demo" className="transition hover:text-amber-300">Live demo</a>
         </div>
         <Button asChild className="bg-amber-400 text-zinc-950 hover:bg-amber-300">

@@ -44,7 +44,12 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     "no-useless-escape": "off",
   },
 }, {
-  ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills"]
+  ignores: [
+    "node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts",
+    "examples/**", "skills", "scripts/**", "tests/**",
+    // committed GitHub Action bundle (6.9 MiB minified) — OOMs ESLint
+    "action/dist/**",
+  ]
 }];
 
 export default eslintConfig;

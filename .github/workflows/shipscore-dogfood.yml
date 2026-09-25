@@ -1,6 +1,7 @@
 # Dogfood: ShipScore scans its own repository on every push and PR.
 # The dashboard, docs, and submission all cite this workflow as proof the
-# scanner runs from commit one.
+# scanner runs from commit one — and that the Action and the web dashboard
+# literally share one canonical scoring engine (rubric 1.0.0).
 
 name: ShipScore (dogfood)
 
@@ -22,9 +23,10 @@ jobs:
         id: shipscore
         uses: ./
         with:
-          threshold: '0' # placeholder repo — tighten to 60 when the real engine lands
+          threshold: '60' # canonical weighted rubric v1.0.0 — the real engine is live
           categories: design,ship,run,secure,test
 
       - name: Report artifact
         run: |
-          echo "Overall score: ${{ steps.shipscore.outputs.score }}"
+          echo "Overall score: ${{ steps.shipscore.outputs.score }} (${{ steps.shipscore.outputs.grade }})"
+          echo "Threshold passed: ${{ steps.shipscore.outputs.passed }}"

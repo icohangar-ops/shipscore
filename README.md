@@ -6,10 +6,13 @@ An open-source agent that audits any repository shipping AI features — scores 
 across **Design, Ship, Run, Secure, Test** — and opens real fix PRs: guardrail middleware,
 eval harnesses, CI gates.
 
-Built by **Team Dash** for the
-[WeAreDevelopers Hackathon](https://lablab.ai/ai-hackathons/wearedevelopers-hackathon)
-(online build Sept 18–24, 2026 · on-site showcase Sept 23–25 at WeAreDevelopers World
-Congress North America, San José).
+Built by **Team Dash** for **Dark Factory** — the official hackathon of WeAreDevelopers
+World Congress North America, presented by BAND
+([lablab.ai](https://lablab.ai/ai-hackathons/wearedevelopers-hackathon),
+online build Sept 26 – Oct 5, 2026).
+
+**Try it live:** [shipscore-gamma.vercel.app](https://shipscore-gamma.vercel.app)
+— paste any public GitHub URL and watch it score.
 
 ## Why
 
@@ -59,21 +62,29 @@ ShipScore posts the score as a PR comment, labels findings by severity, and open
 This repo **dogfoods itself**: the [`shipscore-dogfood`](.github/workflows/shipscore-dogfood.yml)
 workflow runs the action on every push.
 
-## Status: v0 skeleton
+## Status: v0.2 — fully working
 
-What works **today** (this commit):
+Everything below is **shipped and live**:
 
-- ✅ GitHub Action skeleton that scans the repo, detects AI touchpoints by
-  filename/content heuristics, and posts a category-breakdown summary to every PR
-- ✅ `shipscore-report.json` output contract (stable for the dashboard)
-- ✅ Landing page (this repo's site) with the five-category scoring model
+- ✅ **Deterministic scanner** (`scanner@0.2.0`) — ts-morph AST + text detectors,
+  **11 detector families**: AI-SDK imports, LLM call sites, prompt literals,
+  injection surfaces, tool definitions, MCP configs, agent permissions,
+  hardcoded secrets, model refs, eval harnesses, runtime guards
+- ✅ **Scoring engine v1** (`rubric 1.0.0`) — weighted rubric, severity deductions,
+  capped kind penalties, structural gaps + capped credits, weakest-link aggregate
+  (`0.6·avg + 0.4·min`)
+- ✅ **Scan any public GitHub repo** — shallow git clone locally, codeload tarball
+  fallback on serverless (no git binary needed), zip-slip-guarded extraction
+- ✅ **Live dashboard + scoreboard** — per-repo scores, trend, delta; SQLite
+  persistence with lazy schema-ensure (works on read-only/ephemeral filesystems)
+- ✅ **Fix agent** (`fix-agent@0.1.0`) — deterministic fix plans + full PR specs;
+  dry-run by default, real PRs triple-gated (FIX_AGENT_ENABLED + GITHUB_TOKEN + apply)
+- ✅ **GitHub Action** (`team-dash/shipscore@v0`) — PR scoring comments, threshold
+  gates, fix-PR opt-in; **dogfoods itself** on every push
+- ✅ Deployed on Vercel: [shipscore-gamma.vercel.app](https://shipscore-gamma.vercel.app)
 
-What lands during the online build phase (Sept 18–24):
-
-- 🔜 AST-based touchpoint map (ts-morph) replacing filename heuristics
-- 🔜 40+ scoring heuristics + LLM review pass
-- 🔜 Fix-PR authoring agent (guardrail middleware, eval harnesses, CI gates)
-- 🔜 Dashboard with per-repo score history
+Dogfood scores right now: **shipscore (self) 86/B** · deliberately vulnerable
+test fixture **51/F** (secure: 19 — exactly the spread the scanner should catch).
 
 ## The two-minute stage demo
 
@@ -87,28 +98,67 @@ Wifi-proof: three pre-scanned fallback repos are cached locally in case venue wi
 
 ## Stack
 
-TypeScript end to end · Next.js 16 (this landing page) · ts-morph AST analysis ·
-LLM tool calling (GLM / OpenAI-compatible) · GitHub API + Actions · Docker · Vercel
+TypeScript end to end · Next.js 16 (landing + API) · ts-morph AST analysis ·
+deterministic scoring engine (no LLM in the scoring loop — same input, same score,
+every time) · GitHub API + Actions · Prisma/SQLite · Vercel
 
 ## Repository layout
 
 ```
-├── src/            # Next.js 16 landing page (App Router + Tailwind 4)
-├── action/         # ShipScore action runtime (skeleton scanner)
-├── action.yml      # GitHub Action definition (inputs: threshold, categories, fix-prs)
-└── .github/
-    └── workflows/  # dogfood workflow — ShipScore scans ShipScore
+├── src/
+│   ├── app/            # Next.js 16 App Router (landing + dashboard)
+│   │   └── api/        # /api/scan · /api/scores · /api/fix
+│   ├── components/     # landing, scanner demo, scoreboard widgets
+│   └── lib/
+│       ├── scanner/    # ts-morph AST + text detectors, clone/tarball, discover
+│       ├── scoring/    # versioned rubric + weakest-link engine
+│       ├── agent/      # fix planner → PR spec → (gated) GitHub PR
+│       └── runtime-paths.ts  # writable-root resolution (workspace ↔ /tmp)
+├── action/             # ShipScore GitHub Action runtime
+├── action.yml          # Action definition (threshold, categories, fix-prs)
+├── tests/fixtures/     # deliberately vulnerable demo repo (scores 51/F)
+└── .github/workflows/  # dogfood workflow — ShipScore scans ShipScore
 ```
 
 ## Run locally
 
 ```bash
-bun install        # or npm install
-bun run dev        # http://localhost:3000
+bun install                      # or npm install
+cp .env.example .env             # SQLite path (defaults are fine)
+bun run db:push                  # create the SQLite schema
+bun run dev                      # http://localhost:3000
 
-# run the skeleton scanner against any repo
-node action/main.mjs
+# score this repo from the CLI
+bun src/cli/shipscore-cli.ts .
 ```
+
+## API
+
+```bash
+# engine metadata
+curl https://shipscore-gamma.vercel.app/api/scan
+
+# score the built-in vulnerable fixture
+curl -X POST https://shipscore-gamma.vercel.app/api/scan \
+  -H 'Content-Type: application/json' -d '{"target":"demo"}'
+
+# score any public GitHub repo
+curl -X POST https://shipscore-gamma.vercel.app/api/scan \
+  -H 'Content-Type: application/json' \
+  -d '{"repoUrl":"https://github.com/openai/openai-quickstart-node"}'
+
+# leaderboard
+curl https://shipscore-gamma.vercel.app/api/scores
+
+# fix plan (dry-run PR spec — writes nothing)
+curl -X POST https://shipscore-gamma.vercel.app/api/fix \
+  -H 'Content-Type: application/json' -d '{"target":"demo"}'
+```
+
+> Serverless note: the demo scoreboard stores scores in a per-instance SQLite
+> (volume-per-lambda). A scan followed by a scoreboard refresh on the same warm
+> instance always shows the row; a hosted DB (Turso/libSQL) is the drop-in
+> upgrade for cross-instance persistence.
 
 ## Deploy
 

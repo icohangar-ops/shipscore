@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
+  // The "Vulnerable demo repo" button stages this fixture at runtime (an fs
+  // copy, invisible to static tracing) — ship it explicitly with /api/scan.
+  outputFileTracingIncludes: {
+    "/api/scan": ["./tests/fixtures/sample-ai-repo/**"],
+  },
 };
 
 export default nextConfig;

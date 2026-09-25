@@ -1,0 +1,28 @@
+# ShipScore → Vercel upload filter
+# keeps the deployment lean: app sources + fixtures only
+
+# build artifacts & deps
+node_modules
+.next
+.vercel
+.git
+
+# local secrets — never upload
+.env
+.env.*
+*.pem
+
+# local runtime data (scores DB, logs)
+db
+dev.log
+server.log
+
+# workspace extras that are not part of the shipped app
+scripts
+skills
+agent-ctx
+shipscore-repo
+vercel-deploy
+
+# test shell harnesses (fixtures themselves ARE shipped — see next.config.ts)
+tests/*.sh

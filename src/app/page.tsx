@@ -1,6 +1,8 @@
 import { Nav, Hero } from '@/components/landing/hero';
 import { Problem, HowItWorks, Categories } from '@/components/landing/sections';
 import { ActionSection, DemoSection, Footer } from '@/components/landing/action-demo';
+import { ScannerDemo } from '@/components/landing/scanner-demo';
+import { ScoreboardSection } from '@/components/landing/scoreboard';
 
 export default function Home() {
   return (
@@ -12,6 +14,8 @@ export default function Home() {
         <HowItWorks />
         <Categories />
         <ActionSection />
+        <ScannerDemo />
+        <ScoreboardSection />
         <DemoSection />
       </main>
       <Footer />

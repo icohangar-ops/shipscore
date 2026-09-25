@@ -1,8 +1,9 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// ShipScore — Prisma schema (Day 3-4: score persistence)
+//
+// SQLite for the hackathon build; the same schema lifts to Postgres by
+// swapping the datasource provider. Every scan that runs through the web
+// app lands in ScanRecord, so the live scoreboard survives restarts,
+// redeployments and the venue wifi dying mid-demo.
 
 generator client {
   provider = "prisma-client-js"
@@ -13,20 +14,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+/// One row per completed scan. Summary columns power the scoreboard
+/// queries; reportJson keeps the full ScanReport (incl. touchpoints)
+/// so the fix agent can plan PRs from a persisted record without re-scanning.
+model ScanRecord {
+  id            String   @id @default(cuid())
+  /// canonical repo identity: "self" or "github.com/<owner>/<repo>"
+  repoKey       String
+  /// display label, e.g. "openai/openai-node" or "shipscore (self-scan)"
+  repo          String
+  /// full GitHub URL when the scan came from a URL, null otherwise
+  repoUrl       String?
+  owner         String?
+  name          String?
+  overallScore  Int
+  /// A | B | C | D | F
+  grade         String
+  scoreDesign   Int
+  scoreShip     Int
+  scoreRun      Int
+  scoreSecure   Int
+  scoreTest     Int
+  engineVersion String
+  filesScanned  Int
+  filesWithTouchpoints Int
+  totalLines    Int
+  totalTouchpoints Int
+  criticalCount Int
+  highCount     Int
+  durationMs    Int
+  /// score notes (why the score moves), JSON array of strings
+  notesJson     String
+  /// full scan payload (ScanReport + clone meta), JSON
+  reportJson    String
+  /// web | api | action | cli — where the scan was triggered from
+  source        String   @default("web")
+  createdAt     DateTime @default(now())
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@index([repoKey, createdAt])
+  @@index([createdAt])
 }
